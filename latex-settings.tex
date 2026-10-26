@@ -1,0 +1,359 @@
+%***************************************************************************************************
+% Podstawowe ustawienia języka, według którego formatowany będzie dokument
+\usepackage[polish]{babel}
+\usepackage{diagbox}
+
+% Pakiet babel dla polskiego języka powoduje konflikt z pakietem amssymb.
+\let\lll\undefined
+
+% W przypadku wielojęzykowości ustawia główny język dokumentu
+\selectlanguage{polish}
+
+% Kodowanie dokumentu
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc} 
+
+% Dowolny rozmiar czcionek, kodowanie znaków
+\usepackage{lmodern}
+
+% Polskie wcięcia akapitów
+\usepackage{indentfirst}
+
+% Polskie formatowanie typograficzne
+\frenchspacing
+
+% Zapewnia liczne usprawnienia wyświetlania i organizacji matematycznych formuł. 
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+
+% ***************************************************************************************************
+% Kolory  
+% ***************************************************************************************************
+% Umożliwia kolorowanie poszczególnych komórek tabeli i rozszerzoną kontrolę
+\usepackage[table, svgnames]{xcolor}
+
+% Umożliwia łatwą zmianę koloru linii w tabeli
+\usepackage{tabu}
+
+% Definicje kolorów
+\definecolor{lgray}{HTML}{9F9F9F}
+\definecolor{dgray}{HTML}{5F5F5F}
+
+% ***************************************************************************************************
+% Algorytmy i Listingi
+% ***************************************************************************************************
+\usepackage[ruled,vlined,linesnumbered,longend,algochapter]{algorithm2e}
+
+% Zamiana nazwy środowiska z domyślnej "Algorithm X" na "Pseudokod X"
+\newenvironment{algorithm-custom}[1][htb]{
+	\renewcommand{\algorithmcfname}{Pseudokod}
+	\begin{algorithm}[#1]%
+	}{
+\end{algorithm}
+}
+
+\newcommand\algcomment[1]{\footnotesize{#1}}
+\SetCommentSty{algcomment}
+
+% Wyśrodkowana tylda
+\usepackage{textcomp}
+\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
+
+% Listowanie algorytmów
+\renewcommand\algorithmcfname{Algorytm}
+\renewcommand\listalgorithmcfname{Spis algorytmów}
+
+% Pakiet listings i pełna polska konfiguracja (kodowanie UTF-8 oraz polskie nazwy spisów)
+\usepackage{listings}
+\renewcommand{\lstlistingname}{Listing}
+\renewcommand{\lstlistlistingname}{Spis listingów}
+
+\addto\captionspolish{%
+	\renewcommand{\lstlistingname}{Listing}%
+	\renewcommand{\lstlistlistingname}{Spis listingów}%
+}
+
+\lstset{
+	inputencoding=utf8,
+	extendedchars=true,
+	literate=
+		{ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1 {ł}{{\l{}}}1 {ń}{{\'n}}1
+		{ó}{{\'o}}1 {ś}{{\'s}}1 {ź}{{\'z}}1 {ż}{{\.z}}1
+		{Ą}{{\k{A}}}1 {Ć}{{\'C}}1 {Ę}{{\k{E}}}1 {Ł}{{\L{}}}1 {Ń}{{\'N}}1
+		{Ó}{{\'O}}1 {Ś}{{\'S}}1 {Ź}{{\'Z}}1 {Ż}{{\.Z}}1
+}
+
+% ***************************************************************************************************
+% Marginesy 
+% ***************************************************************************************************
+\usepackage[headheight=18pt, top=25mm, bottom=25mm, left=25mm, right=25mm]{geometry}
+
+\makeatletter
+\setlength\@fptop{0\p@}	
+\makeatother
+
+% ***************************************************************************************************
+% Styl 
+% ***************************************************************************************************
+\usepackage{titling}
+\usepackage[subfigure]{tocloft}	
+\tocloftpagestyle{tableOfContentStyle}
+
+\usepackage{fancyhdr}
+
+% Domyślny czysty styl (używany w frontmatter - bez przedmiotu, bez numeru)
+\fancypagestyle{plain}{
+	\fancyhf{}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0pt}
+}
+
+% Domyślny styl dla stron właściwych (środek rozdziału)
+\fancypagestyle{custom}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Rozdział \thechapter
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Rozdział \thechapter \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\fancyfoot[LO,RE]{\small\Przedmiot}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla List of Figures (BEZ PRZEDMIOTU)
+\fancypagestyle{ListofFiguresStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Spis rysunków
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Spis rysunków \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla List of Tables (BEZ PRZEDMIOTU)
+\fancypagestyle{ListofTablesStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Spis tabel
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Spis tabel \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla List of Listings
+\fancypagestyle{ListofListingsStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Spis listingów
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Spis listingów \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla List of Algorithms
+\fancypagestyle{ListofAlgorithmsStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Spis algorytmów
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Spis algorytmów \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla bibliografii (MA PRZEDMIOT)
+\fancypagestyle{bibliographyStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Bibliografia
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Bibliografia \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\fancyfoot[LO,RE]{\small\Przedmiot}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla dodatków (MA PRZEDMIOT)
+\fancypagestyle{appendixStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Dodatki \thechapter
+		\put(-472.1, 12.1){\makebox(0,0)[l]{\includegraphics[width=0.05\textwidth]{resources/pwr-logo}}}
+		\put(-443,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Dodatek \thechapter \hspace{16pt} \hrulefill 
+		\put(-22, 12.1){\makebox(0,0)[l]{\includegraphics[width=0.05\textwidth]{wiz-logo}}}
+		\put(-141,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\fancyfoot[LO,RE]{\small\Przedmiot}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla List of Abbreviation
+\fancypagestyle{ListofAbbreviationStyle}{
+	\fancyhf{}
+	\fancyhead[RO]{
+		\hrulefill \hspace{16pt} \large Spis skrótów
+		\put(-471.5,5.5){\makebox(0,0)[l]{\small Politechnika Wrocławska}}
+	}
+	\fancyhead[LE]{
+		\large Spis skrótów \hspace{16pt} \hrulefill 
+		\put(-188,5.5){\makebox(0,0)[l]{\small Wydział Informatyki i Telekomunikacji}}
+	}
+	\fancyfoot[LE,RO]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Styl dla pozostałych stron spisu treści (czysty)
+\fancypagestyle{tableOfContentStyle}{
+	\fancyhf{}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0.2pt}
+}
+
+% Formatowanie tytułów rozdziałów i sekcji (wraz z subsubsection)
+\usepackage{titlesec}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+\titleformat{\chapter}[hang]
+{\vspace{-10ex}\normalfont\Huge\bfseries}{\thechapter.}{1ex}{} 
+
+\titleformat{\section}[hang]
+{\normalfont\Large\bfseries}{\thesection.}{1ex}{} 
+
+\titleformat{\subsection}[hang]
+{\normalfont\large\bfseries}{\thesubsection.}{1ex}{} 
+
+\titleformat{\subsubsection}[hang]
+{\normalfont\normalsize\bfseries}{\thesubsubsection.}{1ex}{}
+
+% ***************************************************************************************************
+% Linki
+% ***************************************************************************************************
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks	=	true,
+	linkcolor	=	blue,
+	citecolor	=	blue,
+	urlcolor	=	blue
+}
+\urlstyle{same}
+
+% ***************************************************************************************************
+% Listy
+% ***************************************************************************************************
+\usepackage{enumitem}
+\newlist{myitemize}{itemize}{3}
+\setlist[myitemize,1]{label=\textbullet, leftmargin=4mm}
+\setlist[myitemize,2]{label=$\diamond$, leftmargin=8mm}
+\setlist[myitemize,3]{label=$\diamond$, leftmargin=12mm}
+
+% ***************************************************************************************************
+% Inne pakiety
+% ***************************************************************************************************
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{footnote}
+\usepackage{dirtree}
+\usepackage{multirow}
+\usepackage{calc}
+
+% ***************************************************************************************************
+% Matematyczne skróty
+% ***************************************************************************************************
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\IMP}{\rightarrow}
+\newcommand{\IFF}{\leftrightarrow}
+
+% ***************************************************************************************************
+% Środowiska
+% ***************************************************************************************************
+\newtheorem{theorem}{Twierdzenie}[chapter]
+\newtheorem{lemma}{Lemat}[chapter]
+\newtheorem{example}{Przykład}[chapter]
+\newtheorem{corollary}{Wniosek}[chapter]
+\newtheorem{definition}{Definicja}[chapter]
+
+\newenvironment{proof}{\par\noindent \textbf{Dowód.}}{\begin{flushright}\vspace*{-6mm}\mbox{$\blacklozenge$}\end{flushright}}
+\newenvironment{remark}{\bigskip \par\noindent \small \textbf{Uwaga.}}{\begin{small}\vspace*{4mm}\end{small}}
+
+% Dodatkowe pakiety pomocnicze
+\usepackage{psfrag}
+\usepackage{amsfonts}
+\usepackage{supertabular}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{hhline}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{rotating}
+\usepackage{multicol}
+\usepackage{cuted}
+\usepackage{colortbl}
+\usepackage{adjustbox}
+\usepackage{color,soul}
+\usepackage{subfigure}
+\usepackage{pdfpages}
+
+% Wyłączenie generowania pustych stron (zastąpienie cleardoublepage zwykłym clearpage)
+\renewcommand{\cleardoublepage}{\clearpage}
+
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\bftab}{\fontseries{b}\selectfont}
+
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash\noindent}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+
+\usepackage[nocompress]{cite}
+\usepackage{svg}
+\usepackage{tabto}
+\usepackage{wrapfig}
