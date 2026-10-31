@@ -1,23 +1,20 @@
-\chapter{Wprowadzenie}
-\label{chap:wprowadzenie}
+\chapter{Wprowadzenie}\label{ch:wprowadzenie}
 
-\section{Kontekst technologiczny}
-\label{sec:kontekst_technologiczny}
+\section{Kontekst technologiczny}\label{sec:kontekst_technologiczny}
 
 Dynamiczny rozwój technologii informatycznych oraz powszechna cyfryzacja procesów biznesowych i instytucjonalnych sprawiły, że cyberbezpieczeństwo stało się jednym z kluczowych filarów ciągłości działania współczesnych organizacji. Równolegle do postępu w obszarze mechanizmów defensywnych następuje ciągła ewolucja metod i wektorów ataków stosowanych przez ugrupowania cyberprzestępcze oraz zaawansowane grupy sponsorowane przez państwa (ang. \textit{Advanced Persistent Threat}, APT). Tradycyjny paradygmat ochrony stacji roboczych i serwerów, opierający się na klasycznych programach antywirusowych (ang. \textit{Endpoint Protection Platforms}, EPP) weryfikujących sygnatury plików statycznie zapisanych na wolumenie dyskowym, wykazuje obecnie daleko idącą nieskuteczność.
 
 Współczesne rodziny złośliwego oprogramowania, w szczególności konie trojańskie zdalnego dostępu (ang. \textit{Remote Access Trojan}, RAT, np. Agent Tesla, AsyncRAT, Remcos) oraz wyspecjalizowane oprogramowanie kradnące tożsamość cyfrową i poświadczenia (ang. \textit{Infostealer}, np. RedLine, Vidar, LummaC2), wykorzystują złożone mechanizmy zaciemniania kodu (ang. \textit{obfuscation}) oraz unikania mechanizmów detekcji (ang. \textit{defense evasion}). Do fundamentalnych technik utrudniających statyczną analizę należą:
 \begin{itemize}
-    \item \textbf{Techniki bezplikowe oraz Living-off-the-Land (LotL / LOLBins):} wykorzystywanie wbudowanych narzędzi administracyjnych systemu operacyjnego (takich jak \texttt{PowerShell}, \texttt{WMI}, \texttt{certutil}, \texttt{mshta}) do pobierania, dekodowania i uruchamiania ładunków w sposób niewymagający zapisu binariów na nośniku pamięci masowej.
-    \item \textbf{Wstrzykiwanie kodu do przestrzeni procesów:} zacieranie śladów poprzez alokację i egzekucję złośliwego kodu maszynowego w kontekście bezpieczeństwa zaufanych procesów systemowych (np. \texttt{explorer.exe}, \texttt{svchost.exe}) przy użyciu funkcji API jądra Windows (\texttt{VirtualAllocEx}, \texttt{WriteProcessMemory}, \texttt{CreateRemoteThread}).
-    \item \textbf{Drążenie procesów (ang. \textit{Process Hollowing}):} technika polegająca na powołaniu legalnego procesu w stanie zawieszenia (\textit{suspended state}), odmapowaniu oryginalnej sekcji kodu (\texttt{NtUnmapViewOfSection}) i wstrzyknięciu w jej miejsce złośliwego pliku wykonywalnego przed wznowieniem wątku głównego.
-    \item \textbf{Refleksywne ładowanie bibliotek (ang. \textit{Reflective DLL Injection}):} załadowanie biblioteki dynamicznej bezpośrednio z bufora pamięci RAM bez angażowania standardowego mechanizmu ładowania systemu (\texttt{ntdll!LdrLoadDll}) i bez rejestracji w oficjalnych strukturach modułów procesu (\texttt{PEB.Ldr}).
+    \item \textbf{Techniki bezplikowe oraz Living-off-the-Land (LotL / LOLBins):} wykorzystywanie wbudowanych narzędzi administracyjnych systemu operacyjnego (takich jak \code{PowerShell}, \code{WMI}, \code{certutil}, \code{mshta}) do pobierania, dekodowania i uruchamiania ładunków w sposób niewymagający zapisu binariów na nośniku pamięci masowej.
+    \item \textbf{Wstrzykiwanie kodu do przestrzeni procesów:} zacieranie śladów poprzez alokację i egzekucję złośliwego kodu maszynowego w kontekście bezpieczeństwa zaufanych procesów systemowych (np. \file{explorer.exe}, \file{svchost.exe}) przy użyciu funkcji API jądra Windows (\code{VirtualAllocEx}, \code{WriteProcessMemory}, \code{CreateRemoteThread}).
+    \item \textbf{Drążenie procesów (ang. \textit{Process Hollowing}):} technika polegająca na powołaniu legalnego procesu w stanie zawieszenia (\textit{suspended state}), odmapowaniu oryginalnej sekcji kodu (\code{NtUnmapViewOfSection}) i wstrzyknięciu w jej miejsce złośliwego pliku wykonywalnego przed wznowieniem wątku głównego.
+    \item \textbf{Refleksywne ładowanie bibliotek (ang. \textit{Reflective DLL Injection}):} załadowanie biblioteki dynamicznej bezpośrednio z bufora pamięci RAM bez angażowania standardowego mechanizmu ładowania systemu (\code{ntdll!LdrLoadDll}) i bez rejestracji w oficjalnych strukturach modułów procesu (\code{PEB.Ldr}).
 \end{itemize}
 
 Powyższy stan rzeczy determinuje przesunięcie punktu ciężkości w operacjach bezpieczeństwa (ang. \textit{Security Operations Center}, SOC) oraz w informatyce śledczej i reagowaniu na incydenty (ang. \textit{Digital Forensics and Incident Response}, DFIR). Niezbędna staje się analiza ulotnych śladów binarnych w pamięci operacyjnej (RAM) oraz ciągła telemetria behawioralna jądra systemu operacyjnego. Ulotna pamięć RAM stanowi najbardziej wiarygodne źródło wiedzy o incydencie, gdyż przechowuje wstrzyknięte ładunki w postaci odszyfrowanej, struktury procesów, poświadczenia uwierzytelniające oraz aktywne deskryptory połączeń sieciowych.
 
-\section{Problem badawczy i motywacja}
-\label{sec:problem_badawczy}
+\section{Problem badawczy i motywacja}\label{sec:problem_badawczy}
 
 Współczesna inżynieria detekcji (ang. \textit{Detection Engineering}) zmaga się z dwoma krytycznymi wyzwaniami:
 \begin{enumerate}
@@ -27,12 +24,11 @@ Współczesna inżynieria detekcji (ang. \textit{Detection Engineering}) zmaga s
 
 Aby skutecznie przeciwdziałać zaawansowanym zagrożeniom, konieczne jest tworzenie reguł detekcyjnych operujących na wyższych piętrach piramidy - wskaźnikach aktywności (ang. \textit{Indicators of Activity}, IoA) oraz technikach, taktykach i procedurach (ang. \textit{Tactics, Techniques, and Procedures}, TTP) skatalogowanych w matrycy MITRE ATT\&CK.
 
-Wytworzenie precyzyjnych reguł wymaga jednak przeprowadzenia kontrolowanej infekcji w środowisku laboratoryjnym, pozyskania zrzutu pamięci operacyjnej oraz rejestracji szczegółowych dzienników zdarzeń (np. za pośrednictwem narzędzia Microsoft Sysmon). Następnie konieczne jest przeprowadzenie korelacji artefaktów z pamięci RAM (ujawnionych np. przez Volatility 3 lub MemProcFS) z telemetrią logów systemowych (parsowanych przy użyciu nowoczesnych narzędzi, takich jak Hayabusa czy Chainsaw). 
+Wytworzenie precyzyjnych reguł wymaga jednak przeprowadzenia kontrolowanej infekcji w środowisku laboratoryjnym, pozyskania zrzutu pamięci operacyjnej oraz rejestracji szczegółowych dzienników zdarzeń (np. za pośrednictwem narzędzia Microsoft Sysmon). Następnie konieczne jest przeprowadzenie korelacji artefaktów z pamięci RAM (ujawnionych np. przez Volatility 3 lub MemProcFS) z telemetrią logów systemowych (parsowanych przy użyciu nowoczesnych narzędzi, takich jak Hayabusa czy Chainsaw).
 
 Istotną luką w wielu opracowaniach laboratoryjnych jest brak spójnego, powtarzalnego podejścia, które w sposób zintegrowany łączy fazę inżynierii laboratoryjnej, poinfekcyjną analizę śledczą oraz bezpośrednią syntezę pozyskanych danych w postaci reguł YARA (dla pamięci RAM) oraz Sigma (dla dzienników zdarzeń). Niniejszy projekt stanowi odpowiedź na tę potrzebę.
 
-\section{Cel i teza projektu}
-\label{sec:cele_projektu}
+\section{Cel i teza projektu}\label{sec:cele_projektu}
 
 Głównym celem projektu jest \textbf{zaprojektowanie, wdrożenie i walidacja bezpiecznego, odizolowanego środowiska laboratoryjnego oraz opracowanie metodyki ekstrakcji i korelacji poinfekcyjnych artefaktów pamięci RAM i dzienników zdarzeń Windows w celu wytworzenia i weryfikacji wysokowiernych reguł detekcyjnych YARA i Sigma, a także skompilowania kompleksowej matrycy IoC/IoA.}
 
@@ -42,10 +38,10 @@ W ramach celu głównego wyznaczono następujące cele szczegółowe:
     Utworzenie odizolowanego segmentu wirtualnego, obejmującego stację ofiary (system Windows 10/11) ze specjalnie ukształtowanym profilem telemetrii Sysmon i dezaktywowanymi mechanizmami ochronnymi (Windows Defender, AMSI) oraz węzeł analityczny bazujący na systemie Linux (np. REMnux), wyposażony w usługi emulacji sieci (FakeNet-NG / INetSim).
     
     \item \textbf{Akwizycja i kontrolowana egzekucja materiału badawczego:}
-    Bezpieczne pobranie z repozytoriów złośliwego oprogramowania (np. MalwareBazaar) próbek reprezentujących rodziny Infostealer oraz RAT, ich statyczna wstępna weryfikacja, detonacja w monitorowanym węźle oraz pozyskanie pełnego zrzutu pamięci operacyjnej z poziomu hiperwizora wraz z eksportem dzienników \texttt{.evtx}.
+    Bezpieczne pobranie z repozytoriów złośliwego oprogramowania (np. MalwareBazaar) próbek reprezentujących rodziny Infostealer oraz RAT, ich statyczna wstępna weryfikacja, detonacja w monitorowanym węźle oraz pozyskanie pełnego zrzutu pamięci operacyjnej z poziomu hiperwizora wraz z eksportem dzienników \file{.evtx}.
     
     \item \textbf{Informatyka śledcza pamięci ulotnej (Memory Forensics):}
-    Identyfikacja ukrytych procesów, anomalii w strukturze drzewa procesów, zmapowanie nieprzypisanych pamięci VAD ze statusem \texttt{PAGE\_EXECUTE\_READWRITE} (detekcja iniekcji kodu) oraz ekstrakcja zdekodowanych ładunków binarnych bezpośrednio z RAM za pomocą narzędzi Volatility 3 oraz MemProcFS.
+    Identyfikacja ukrytych procesów, anomalii w strukturze drzewa procesów, zmapowanie nieprzypisanych pamięci VAD ze statusem \code{PAGE_EXECUTE_READWRITE} (detekcja iniekcji kodu) oraz ekstrakcja zdekodowanych ładunków binarnych bezpośrednio z RAM za pomocą narzędzi Volatility 3 oraz MemProcFS.
     
     \item \textbf{Analiza telemetrii systemowej i korelacja zdarzeń:}
     Zautomatyzowane przetworzenie logów systemowych za pomocą narzędzi Chainsaw oraz Hayabusa, rekonstrukcja łańcucha wykonania (drzewo procesów, parametry CLI, manipulacje rejestrem w celach persystencji, aktywność sieciowa) oraz powiązanie zachowań telemetrycznych z artefaktami pamięciowymi.
@@ -54,25 +50,24 @@ W ramach celu głównego wyznaczono następujące cele szczegółowe:
     Zaprojektowanie autorskich reguł YARA ukierunkowanych na wykrywanie artefaktów pamięciowych w procesach oraz generycznych reguł Sigma wykrywających anomalie behawioralne w dziennikach systemowych, weryfikacja ich skuteczności oraz współczynnika fałszywych alarmów (FP) w czystym systemie referencyjnym, a także stworzenie matrycy wskaźników IoC oraz IoA.
 \end{enumerate}
 
-\section{Zakres projektu}
-\label{sec:zakres_projektu}
+\section{Zakres projektu}\label{sec:zakres_projektu}
 
 Zakres pracy obejmuje pięć głównych faz realizacyjnych, przedstawionych w tabeli~\ref{tab:fazy_projektu}.
 
 \begin{table}[htbp]
 \centering
-\small
 \caption{Zestawienie faz realizacyjnych i komponentów projektu}
 \label{tab:fazy_projektu}
-\begin{tabularx}{\textwidth}{l p{4.2cm} X}
+\tablefont
+\begin{tabularx}{\linewidth}{l L{4.2cm} Y}
 \toprule
-\textbf{Faza} & \textbf{Obszar prac} & \textbf{Główne narzędzia / technologie} \\
+\hcell{Faza} & \hcell{Obszar prac} & \hcell{Główne narzędzia / technologie} \\
 \midrule
 I & Architektura i wdrożenie laboratorium & Hiperwizor (Type-2), izolowana sieć wewnętrzna (\textit{host-only}), FakeNet-NG, INetSim, PowerShell hardening/unhardening, Sysmon. \\
 \addlinespace
-II & Pozyskanie próbek i bezpieczna detonacja & Repozytorium MalwareBazaar, narzędzia statyczne (PEstudio, Floss), mechanizm snapshotów hiperwizora, akwizycja RAM i logów \texttt{.evtx}. \\
+II & Pozyskanie próbek i bezpieczna detonacja & Repozytorium MalwareBazaar, narzędzia statyczne (PEstudio, Floss), mechanizm snapshotów hiperwizora, akwizycja RAM i logów \file{.evtx}. \\
 \addlinespace
-III & Śledcza analiza pamięci RAM & Volatility 3, MemProcFS, wtyczki \texttt{malfind}, \texttt{pslist}, \texttt{netscan}, \texttt{vadinfo}, disasemblery (Ghidra, IDA). \\
+III & Śledcza analiza pamięci RAM & Volatility 3, MemProcFS, wtyczki \code{malfind}, \code{pslist}, \code{netscan}, \code{vadinfo}, disasemblery (Ghidra, IDA). \\
 \addlinespace
 IV & Analiza i korelacja logów systemowych & Sysmon Modular, Chainsaw, Hayabusa, Windows Event Logs, parsery JSON/CSV, timeline analysis. \\
 \addlinespace
@@ -89,8 +84,7 @@ W celu zachowania przejrzystości metodologicznej i powtarzalności eksperymentu
     \item \textbf{Faza ataku:} Badania koncentrują się na analizie poinfekcyjnej (\textit{post-execution / post-compromise}), kładąc główny nacisk na fazy wykonania (\textit{Execution}), utrzymania dostępu (\textit{Persistence}), unikania obrony (\textit{Defense Evasion}) oraz komunikacji (\textit{Command and Control}).
 \end{itemize}
 
-\section{Metodologia badawcza i warsztat technologiczny}
-\label{sec:metodologia}
+\section{Metodologia badawcza i warsztat technologiczny}\label{sec:metodologia}
 
 Metodologia zastosowana w niniejszym projekcie opiera się na iteracyjnym cyklu inżynierii detekcji (ang. \textit{Detection Engineering Life Cycle}), który integruje analizę behawioralną, analizę statyczną artefaktów oraz formalne testowanie reguł detekcyjnych.
 
@@ -99,6 +93,6 @@ W toku realizacji projektu wykorzystywane są następujące grupy narzędzi:
     \item \textbf{Środowisko wirtualizacji i symulacji sieci:} Wirtualne maszyny operujące w odciętej podsieci; węzeł analityczny przechwytuje zapytania DNS, protokoły HTTP/HTTPS, SMTP oraz surowe połączenia TCP, generując wiarygodne syntetyczne odpowiedzi serwera C2.
     \item \textbf{Telemetria systemowa (Sysmon):} Wykorzystanie rozbudowanego pliku konfiguracyjnego (m.in. na bazie standardu \textit{Sysmon-Modular}), pozwalającego na rejestrację m.in. powoływania wątków zdalnych (Event ID 8), uzyskiwania dostępu do procesów LSASS/innych (Event ID 10) oraz ładowania sterowników i bibliotek (Event ID 6 i 7).
     \item \textbf{Frameworki analizy pamięci (Volatility 3 / MemProcFS):} Zastosowanie technik eksploracji pamięci fizycznej i wirtualnej, omijających manipulacje adwersarza w tablicach jądra (\textit{DKOM - Direct Kernel Object Manipulation}) i pozwalających na ekstrakcję czystego kodu wykonywalnego z deskryptorów VAD.
-    \item \textbf{Narzędzia szybkiego triage logów (Hayabusa / Chainsaw):} Przetwarzanie wielomegabajtowych plików \texttt{.evtx} z wykorzystaniem wbudowanych reguł Sigma w celu natychmiastowej rekonstrukcji osi czasu incydentu.
-    \item \textbf{Formaty reguł detekcyjnych (YARA i Sigma):} Opracowanie reguł YARA w standardzie wersji 4.x ze szczególnym uwzględnieniem modułów \texttt{pe} i selekcji heksadecymalnej oraz reguł Sigma w formacie YAML zgodnych ze specyfikacją \textit{SigmaHQ}.
+    \item \textbf{Narzędzia szybkiego triage logów (Hayabusa / Chainsaw):} Przetwarzanie wielomegabajtowych plików \file{.evtx} z wykorzystaniem wbudowanych reguł Sigma w celu natychmiastowej rekonstrukcji osi czasu incydentu.
+    \item \textbf{Formaty reguł detekcyjnych (YARA i Sigma):} Opracowanie reguł YARA w standardzie wersji 4.x ze szczególnym uwzględnieniem modułów \code{pe} i selekcji heksadecymalnej oraz reguł Sigma w formacie YAML zgodnych ze specyfikacją \textit{SigmaHQ}.
 \end{itemize}

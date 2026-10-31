@@ -1,0 +1,47 @@
+%***************************************************************************************************
+% preamble/floats-and-tables.tex - podpisy, rysunki, tabele.
+%***************************************************************************************************
+
+\graphicspath{{images/}{logos/}}
+
+\captionsetup{font=small, labelfont=bf, labelsep=period, skip=8pt}
+\captionsetup[figure]{position=bottom}
+\captionsetup[table]{position=top}
+\captionsetup[subfigure]{font=footnotesize, labelfont=bf, labelsep=period}
+
+\floatplacement{figure}{\DefaultFigurePlacement}
+
+\raggedbottom
+
+\makeatletter
+\setlength\@fptop{0\p@}
+\makeatother
+
+% ---------------------------------------------------------------------------------------------
+% Rysunek: \Figure[szerokość]{plik}{podpis}{etykieta}
+% ---------------------------------------------------------------------------------------------
+\newcommand{\Figure}[4][0.9]{%
+  \begin{figure}
+    \centering
+    \IfFileExists{images/#2}{%
+      \includegraphics[width=#1\linewidth, height=0.75\textheight, keepaspectratio]{images/#2}%
+    }{%
+      \PackageWarning{df-project}{Brak pliku obrazu images/#2}%
+      \fbox{\parbox[c][5cm][c]{0.8\linewidth}{\centering\textit{Brak pliku obrazu}\\[1ex]\texttt{\detokenize{images/#2}}}}%
+    }%
+    \caption{#3}\label{#4}%
+  \end{figure}%
+}
+
+% ---------------------------------------------------------------------------------------------
+% Tabele
+% ---------------------------------------------------------------------------------------------
+\newcommand{\tablefont}{\footnotesize}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{5pt}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{Z}{>{\centering\arraybackslash}X}
