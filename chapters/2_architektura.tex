@@ -1,0 +1,176 @@
+\chapter{Architektura środowiska laboratoryjnego i metodyka badawcza}\label{ch:architektura_laboratorium}
+
+\section{Założenia architektoniczne i izolacja sieciowa}\label{sec:izolacja_sieciowa}
+
+Fundamentem eksperymentu jest utworzenie odizolowanego, powtarzalnego środowiska wirtualnego, które uniemożliwia wyciek szkodliwego kodu poza kontur badawczy, a jednocześnie dostarcza analizowanym próbkom wiarygodne syntetyczne odpowiedzi sieciowe. Schemat topologii oraz podział ról w sieci przedstawiono na rysunku~\ref{fig:topologia_lab}.
+
+\Figure[0.85]{topology.png}{Topologia połączeń i podział ról w odizolowanej podsieci laboratoryjnej}{fig:topologia_lab}
+
+Do realizacji projektu wykorzystano hiperwizor typu 2 (\textit{Type-2 Hypervisor}) VMware Workstation Pro. Wybór tego środowiska wynika z natywnego wsparcia dla formatu pamięci migawek (\file{.vmem}), który jest bezpośrednio odczytywany przez frameworki \textit{Volatility 3} oraz \textit{MemProcFS} bez konieczności uruchamiania dodatkowych agentów akwizycyjnych wewnątrz infekowanej maszyny.
+
+Współpraca węzłów odbywa się w ramach dedykowanej sieci wirtualnej typu \textit{Host-Only} (\code{VMnet2}) z wyłączonym serwerem DHCP hiperwizora oraz całkowicie zablokowanym routingiem do fizycznej karty sieciowej hosta. Adresacja IP została skonfigurowana statycznie i ujęta w tabeli~\ref{tab:adresacja_sieciowa}.
+
+\begin{table}[htbp]
+\centering
+\caption{Konfiguracja adresacji wirtualnej podsieci badawczej}
+\label{tab:adresacja_sieciowa}
+\tablefont
+\begin{tabularx}{\linewidth}{l l L{3.5cm} Y}
+\toprule
+\hcell{Węzeł} & \hcell{Adres IP} & \hcell{Rola w sieci} & \hcell{Opis interfejsu} \\
+\midrule
+REMnux & \code{192.168.100.1} & Brama domyślna / DNS & Pętla symulacji C2 (INetSim / FakeNet-NG) \\
+Windows Victim & \code{192.168.100.10} & Stacja ofiary & Punkt detonacji próbek złośliwego oprogramowania \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Przygotowanie stacji ofiary i konfiguracja telemetrii}\label{sec:konfiguracja_windows}
+
+Maszyna ofiary bazuje na 64-bitowym systemie Microsoft Windows 10/11 Pro. Celem zapewnienia niezakłóconego wykonania próbek złośliwego oprogramowania oraz pełnej rejestracji artefaktów podjęto opisane poniżej kroki konfiguracyjne.
+
+\subsection{Specyfikacja systemu i dezaktywacja mechanizmów obronnych}\label{subsec:dezaktywacja_obrony}
+
+Aplikacje typu \textit{Infostealer} oraz \textit{RAT} często przerywają działanie w przypadku wykrycia aktywnych mechanizmów ochronnych. Aby zagwarantować pełne wykonanie ładunku (stadium \textit{post-exploitation}), wyłączono następujące moduły:
+\begin{enumerate}
+    \item \textbf{Windows Defender i SmartScreen:} Trwale zdezaktywowane (po uprzednim wyłączeniu mechanizmu \textit{Tamper Protection} w interfejsie zabezpieczeń Windows) za pomocą lokalnych polis grup (GPO) oraz modyfikacji kluczy rejestru przedstawionych na listingu~\ref{lst:disable_defender}.
+    \item \textbf{Antimalware Scan Interface (AMSI):} Wyłączone skanowanie skryptów w czasie rzeczywistym, aby umożliwić pełne wykonanie obfuskowanych loaderów PowerShell oraz VBScript/JScript.
+    \item \textbf{Windows Update oraz Windows Firewall:} Zablokowane powiązane usługi systemowe w celu uniknięcia niekontrolowanych zmian w strukturach jądra i wersjach bibliotek DLL oraz umożliwienia swobodnej komunikacji wychodzącej do lokalnej bramy C2.
+\end{enumerate}
+
+\begin{lstlisting}[style=terminal, caption={Dezaktywacja ochrony Windows Defender i zapory z poziomu PowerShell}, label={lst:disable_defender}]
+Set-MpPreference -DisableRealtimeMonitoring $true -DisableIOAVProtection $true -DisableBehaviorMonitoring $true -DisableBlockAtFirstSeen $true -DisableScriptScanning $true
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender" -Name "DisableAntiSpyware" -Value 1 -PropertyType DWORD -Force
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+\end{lstlisting}
+
+\subsection{Wdrożenie i profilowanie rozszerzonej telemetrii Sysmon}\label{subsec:wdrozenie_sysmon}
+
+Standardowe dzienniki Windows Event Log nie dostarczają dostatecznej szczegółowości w obszarze tworzenia zdalnych wątków czy dostępu do pamięci procesów. Na stacji wdrożono narzędzie \textbf{Microsoft Sysmon} z profilowaniem opartym na standardzie \textit{Sysmon-Modular} (listing~\ref{lst:sysmon_install}).
+
+\begin{lstlisting}[style=terminal, caption={Instalacja usługi Sysmon z dedykowanym plikiem konfiguracyjnym}, label={lst:sysmon_install}]
+Sysmon64.exe -accepteula -i sysmonconfig-export.xml
+\end{lstlisting}
+
+Kluczowe identyfikatory zdarzeń (Event ID) skonfigurowane w profilu pod kątem analizy poinfekcyjnej ujęto w tabeli~\ref{tab:sysmon_events}.
+
+\begin{table}[htbp]
+\centering
+\caption{Konfiguracja reguł audytu Sysmon na stacji badawczej}
+\label{tab:sysmon_events}
+\tablefont
+\begin{tabularx}{\linewidth}{c L{4.5cm} Y}
+\toprule
+\hcell{Event ID} & \hcell{Nazwa zdarzenia} & \hcell{Cel analityczny / wykrywane techniki} \\
+\midrule
+1 & ProcessCreate & Śledzenie drzewa procesów, parametrów CLI, wywołań LOLBins. \\
+3 & NetworkConnect & Powiązanie połączeń TCP/UDP z konkretnym identyfikatorem procesu (\code{PID}). \\
+6 & DriverLoad & Wykrywanie ładowania nielicencjonowanych sterowników (rootkity / BYOVD). \\
+7 & ImageLoad & Rejestracja ładowanych bibliotek DLL (wsparcie detekcji iniekcji i DLL Hijacking). \\
+8 & CreateRemoteThread & Kluczowe dla detekcji \textit{Process Injection} oraz \textit{Process Hollowing}. \\
+10 & ProcessAccess & Wykrywanie odczytu pamięci \file{lsass.exe} oraz manipulacji pamięcią obcych procesów. \\
+11 & FileCreate & Rejestracja zrzucanych ładunków wykonywalnych oraz plików persystencji. \\
+12/13 & RegistryEvent & Monitorowanie kluczy autostartu (\code{Run}, \code{RunOnce}, \code{Services}). \\
+22 & DNSEvent & Rejestracja zapytań DNS generowanych przez procesy złośliwego oprogramowania. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Konfiguracja natywnych dzienników Windows i buforów EVTX}\label{subsec:optymalizacja_evtx}
+
+Standardowy rozmiar pliku dziennika \file{Microsoft-Windows-Sysmon/Operational.evtx} (20~MB) jest niewystarczający podczas intensywnej infekcji i może prowadzić do nadpisywania zdarzeń. Zwiększono limity buforów do 256~MB za pomocą narzędzia \cmd{wevtutil} (listing~\ref{lst:wevtutil_config}) oraz aktywowano pełne logowanie bloków skryptowych PowerShell (\textit{Script Block Logging}, Event ID 4104).
+
+\begin{lstlisting}[style=terminal, caption={Zwiększenie maksymalnego rozmiaru buforów dzienników zdarzeń EVTX}, label={lst:wevtutil_config}]
+wevtutil sl "Microsoft-Windows-Sysmon/Operational" /ms:268435456
+wevtutil sl "Security" /ms:268435456
+wevtutil sl "Microsoft-Windows-PowerShell/Operational" /ms:268435456
+\end{lstlisting}
+
+\section{Konfiguracja węzła analityczno-symulacyjnego (REMnux)}\label{sec:konfiguracja_remnux}
+
+Węzeł analityczny oparto na dystrybucji REMnux (system Linux bazujący na Ubuntu), stanowiącej wyspecjalizowane środowisko do inżynierii wstecznej, analizy złośliwego oprogramowania i informatyki śledczej.
+
+\subsection{Emulacja usług sieciowych i przechwytywanie ruchu (INetSim / FakeNet-NG, tshark)}\label{subsec:emulacja_sieci}
+
+Większość współczesnych próbek złośliwego oprogramowania przed przejściem do właściwej fazy ataku weryfikuje dostępność łączności sieciowej poprzez zapytania DNS lub pobranie testowego zasobu HTTP. Brak odpowiedzi powoduje przedwczesne zakończenie procesu.
+
+Na stacji REMnux skonfigurowano usługę \textbf{INetSim} (wspieraną w razie potrzeby przez \textbf{FakeNet-NG}), która nasłuchuje na interfejsie \code{192.168.100.1} i emuluje standardowe protokoły aplikacyjne:
+\begin{itemize}
+    \item \textbf{Serwer DNS:} Odpowiada adresem bramy (\code{192.168.100.1}) na wszystkie zapytania o nazwy domenowe kierowane przez malware do serwerów C2.
+    \item \textbf{Serwer HTTP/HTTPS:} Zwraca poprawne kody odpowiedzi (\code{200 OK}) oraz serwuje syntetyczne pliki w odpowiedzi na żądania pobrania ładunków kolejnego etapu (\textit{second-stage payloads}).
+    \item \textbf{Serwery SMTP / FTP / Dummy TCP:} Przechwytują próby eksfiltracji wykradzionych danych oraz surowe sesje komunikacyjne RAT.
+\end{itemize}
+
+Cały ruch sieciowy na interfejsie wewnętrznym jest równolegle rejestrowany do plików \file{.pcap} za pomocą narzędzia \cmd{tshark} (listing~\ref{lst:tshark_capture}).
+
+\begin{lstlisting}[style=terminal, caption={Uruchomienie pełnego przechwytywania pakietów na interfejsie laboratoryjnym}, label={lst:tshark_capture}]
+tshark -i eth0 -w /analiza/dumps/capture_infekcja.pcap
+\end{lstlisting}
+
+\subsection{Stos narzędziowy analizy śledczej i inżynierii detekcji}\label{subsec:stos_narzedziowy}
+
+Na maszynie REMnux oraz hoście analitycznym przygotowano zestaw oprogramowania podzielony na cztery obszary funkcjonalne:
+\begin{enumerate}
+    \item \textbf{Wstępna analiza statyczna (Triage):} \textit{PEstudio}, \textit{Detect It Easy (DIE)}, \textit{FLOSS} (ekstrakcja obfuskowanych ciągów znaków) oraz deasembler/dekompilator \textit{Ghidra}.
+    \item \textbf{Analiza pamięci operacyjnej RAM:} \textit{Volatility 3} (wraz z tablicami symboli PDB dla docelowego jądra Windows) oraz \textit{MemProcFS} umożliwiający zamontowanie zrzutu pamięci jako wirtualnego systemu plików.
+    \item \textbf{Triage i korelacja dzienników zdarzeń:} \textit{Hayabusa} oraz \textit{Chainsaw} wyposażone w bazę reguł detekcyjnych \textit{SigmaHQ}.
+    \item \textbf{Inżynieria i walidacja reguł:} Silnik \textit{YARA 4.x} oraz narzędzie \cmd{sigma-cli} do konwersji i weryfikacji składniowej reguł Sigma.
+\end{enumerate}
+
+\section{Metodyka prowadzenia eksperymentu i akwizycji artefaktów}\label{sec:metodyka_akwizycji}
+
+W celu zachowania rygoru badawczego i pełnej porównywalności wyników, dla każdej badanej próbki złośliwego oprogramowania (opisanej w rozdziałach~\ref{ch:studium_przypadku_1} oraz~\ref{ch:studium_przypadku_2}) stosowana jest jednolita procedura eksperymentalna.
+
+\subsection{Kryteria doboru próbek i procedura wstępnej weryfikacji statycznej}\label{subsec:dobor_probek}
+
+Materiał badawczy pozyskiwany jest z publicznego repozytorium próbek złośliwego oprogramowania \textit{MalwareBazaar} (\code{abuse.ch}). Dobór obejmuje aktywne próbki z rodzin koni trojańskich zdalnego dostępu (RAT), loaderów oraz programów wykradających dane (Infostealer) przeznaczonych dla architektury x64/x86 systemu Windows. Przed uruchomieniem każdej próbki wykonywana jest analiza statyczna obejmująca:
+\begin{itemize}
+    \item wyznaczenie kryptograficznych skrótów identyfikacyjnych (MD5, SHA-1, SHA-256),
+    \item inspekcję nagłówków PE, sekcji wykonywalnych, współczynnika entropii (weryfikacja spakowania/obfuskacji) oraz tablicy importów (IAT),
+    \item ekstrakcję jawnych oraz dekodowanych ciągów znaków za pomocą narzędzia \textit{FLOSS}.
+\end{itemize}
+
+\subsection{Procedura kontrolowanej detonacji i akwizycji poinfekcyjnej}\label{subsec:procedura_detonacji}
+
+Każdy eksperyment realizowany jest w sześciu powtarzalnych etapach zestawionych w tabeli~\ref{tab:cykl_badawczy}. Zrzut pamięci operacyjnej (\file{.vmem}) pozyskiwany jest poprzez wstrzymanie maszyny wirtualnej (\textit{Suspend}) lub wykonanie migawki z pamięcią na poziomie hiperwizora VMware, co eliminuje ryzyko wykrycia narzędzia akwizycyjnego przez złośliwy kod (\textit{anti-forensics}) i gwarantuje atomową spójność obrazu RAM.
+
+\begin{table}[htbp]
+\centering
+\caption{Iteracyjny cykl prowadzenia eksperymentu badawczego i akwizycji materiału dowodowego}
+\label{tab:cykl_badawczy}
+\tablefont
+\begin{tabularx}{\linewidth}{c L{4.2cm} Y}
+\toprule
+\hcell{Etap} & \hcell{Faza procedury} & \hcell{Wykonywane czynności operacyjne} \\
+\midrule
+1 & Przywrócenie stanu bazowego & Odtworzenie zweryfikowanej migawki \code{Clean_State} na stacji Windows Victim oraz wyczyszczenie logów usług na węźle REMnux. \\
+\addlinespace
+2 & Inicjalizacja nasłuchu & Uruchomienie emulacji usług w pakiecie INetSim oraz rejestracji pakietów \cmd{tshark} na interfejsie bramy analitycznej. \\
+\addlinespace
+3 & Kontrolowana detonacja & Przeniesienie próbki na stację ofiary i jej uruchomienie z uprawnieniami użytkownika lub administratora. \\
+\addlinespace
+4 & Okno obserwacji poinfekcyjnej & Utrzymanie działania systemu przez 5-10 minut w celu umożliwienia rozpakowania ładunku w RAM, iniekcji procesowej, założenia persystencji i nawiązania sesji C2. \\
+\addlinespace
+5 & Akwizycja artefaktów & Eksport dzienników \file{.evtx} (Sysmon, Security, PowerShell), zatrzymanie przechwytywania \file{.pcap} oraz wykonanie pełnego zrzutu pamięci RAM (\file{.vmem}) z poziomu hiperwizora. \\
+\addlinespace
+6 & Weryfikacja integralności & Obliczenie sum kontrolnych SHA-256 dla wszystkich zebranych plików dowodowych i przekazanie ich do analizy na węźle REMnux. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Metodyka korelacji wieloźródłowej oraz walidacji reguł detekcyjnych (FP/TP)}\label{subsec:metodyka_walidacji}
+
+Zebrany materiał dowodowy poddawany jest dwutorowej analizie śledczej:
+\begin{enumerate}
+    \item \textbf{Ścieżka analizy pamięci RAM:} Identyfikacja anomalii w strukturach procesów (\code{pslist}, \code{pstree}, \code{psscan}, \code{cmdline}), lokalizacja wstrzykniętego kodu w obszarach pamięci prywatnej z uprawnieniami \code{PAGE_EXECUTE_READWRITE} (\code{malfind}, \code{vadinfo}, MemProcFS) oraz ekstrakcja odszyfrowanych obrazów PE bezpośrednio z przestrzeni adresowej procesu.
+    \item \textbf{Ścieżka analizy telemetrii i logów:} Automatyczny triage plików \file{.evtx} narzędziami \textit{Hayabusa} i \textit{Chainsaw}, a następnie szczegółowa rekonstrukcja łańcucha zdarzeń Sysmon i korelacja z ruchem sieciowym \file{.pcap}.
+\end{enumerate}
+
+Integracja obu ścieżek następuje poprzez powiązanie identyfikatorów procesów (\code{PID}, \code{ParentPID}), unikalnych deskryptorów \code{ProcessGuid}, znaczników czasu (\textit{timestamps} UTC) oraz gniazd sieciowych. Na tej podstawie wytwarzane są autorskie reguły **YARA** (ukierunkowane na artefakty binarne i ciągi znaków wyekstrahowane z pamięci RAM) oraz reguły **Sigma** (opisujące wzorce behawioralne w dziennikach zdarzeń).
+
+Każda wytworzona reguła przechodzi dwuetapową walidację empiryczną:
+\begin{itemize}
+    \item \textbf{Test skuteczności (\textit{True Positive}, TP):} Potwierdzenie poprawnego wyzwolenia reguły na poinfekcyjnym zrzucie pamięci RAM (\file{.vmem}) lub zbiorze dzienników \file{.evtx} pochodzących z zainfekowanego systemu.
+    \item \textbf{Test odporności na fałszywe alarmy (\textit{False Positive}, FP):} Przeskanowanie czystego zrzutu pamięci referencyjnej oraz dzienników zdarzeń wygenerowanych podczas standardowej pracy systemu (migawka bazowa \code{Clean_State}) w celu potwierdzenia zerowej liczby fałszywych trafień.
+\end{itemize}
+

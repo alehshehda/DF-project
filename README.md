@@ -28,6 +28,10 @@ frontmatter/
   abbreviations.tex                   list of abbreviations and acronyms
 chapters/
   1_wprowadzenie.tex                  Introduction, research problem, scope, and methodology
+  2_architektura.tex                  Lab environment architecture and research methodology
+  3_studium_przypadku_1.tex           Case Study I - Post-infection analysis and detection engineering (Sample #1)
+  4_studium_przypadku_2.tex           Case Study II - Post-infection analysis and detection engineering (Sample #2)
+  5_podsumowanie.tex                  Summary, comparative analysis, and conclusions
 bib/
   references.bib                      BibTeX bibliography database
   plabbrv-fixed.bst                   Polish bibliography style
@@ -38,4 +42,3 @@ logos/                                university logos
 ## Build
 
 The document is automatically compiled to `DF-project.pdf` and published to GitHub Releases and GitHub Pages via the GitHub Actions CI/CD workflow (`.github/workflows/compile.yml`) on every push to `main`.
-

@@ -1,0 +1,49 @@
+\chapter{Studium przypadku II - Analiza poinfekcyjna i inżynieria detekcji (Próbka \#2)}\label{ch:studium_przypadku_2}
+
+\section{Pozyskanie próbki, analiza wstępna i przebieg detonacji}\label{sec:cs2_triage}
+
+\subsection{Metadane próbki i wstępna weryfikacja statyczna}\label{subsec:cs2_statyczna}
+% TODO: Tabela z metadanymi Próbki #2 (nazwa rodziny, SHA-256 z makrem \hash{}, rozmiar, architektura PE, sekcje, entropia, podejrzane importy API oraz ciągi znaków z FLOSS).
+
+\subsection{Kontrolowana egzekucja i akwizycja materiału dowodowego}\label{subsec:cs2_egzekucja}
+% TODO: Opis uruchomienia Próbki #2 w środowisku Windows Victim, przebieg obserwacji oraz tabela zebranych plików dowodowych (.vmem, .evtx, .pcap) wraz z sumami SHA-256.
+
+\section{Analiza śledcza pamięci operacyjnej RAM}\label{sec:cs2_analiza_ram}
+
+\subsection{Identyfikacja procesów i anomalii w drzewie wykonania}\label{subsec:cs2_procesy_ram}
+% TODO: Wyniki wtyczek Volatility 3 (windows.pslist, windows.pstree, windows.psscan, windows.cmdline) oraz zrzuty/listingi podejrzanych procesów.
+
+\subsection{Detekcja wstrzykiwania kodu i analiza obszarów VAD}\label{subsec:cs2_iniekcja_vad}
+% TODO: Identyfikacja obszarów PAGE_EXECUTE_READWRITE za pomocą windows.malfind / windows.vadinfo oraz analiza w MemProcFS.
+
+\subsection{Artefakty sieciowe w pamięci i ekstrakcja zrzuconego ładunku (Payload)}\label{subsec:cs2_ekstrakcja_payload}
+% TODO: Analiza połączeń w RAM (windows.netscan / netstat), ekstrakcja niezaszyfrowanego ładunku PE z pamięci procesu i jego analiza statyczna.
+
+\section{Analiza telemetrii systemowej i ruchu sieciowego}\label{sec:cs2_analiza_logow}
+
+\subsection{Automatyczny triage dzienników zdarzeń (Hayabusa i Chainsaw)}\label{subsec:cs2_triage_evtx}
+% TODO: Wyniki szybkiego skanowania logów .evtx narzędziami Hayabusa i Chainsaw, zestawienie wykrytych alertów według krytyczności.
+
+\subsection{Rekonstrukcja aktywności procesowej, plikowej i rejestrowej (Sysmon)}\label{subsec:cs2_sysmon_analiza}
+% TODO: Szczegółowa analiza zdarzeń Sysmon (Event ID 1, 7, 8, 10, 11, 12/13) - parametry CLI, iniekcja, persystencja w rejestrze lub harmonogramie zadań.
+
+\subsection{Analiza przechwyconej komunikacji C2 (INetSim / PCAP)}\label{subsec:cs2_analiza_sieci}
+% TODO: Analiza zapytań DNS (Sysmon Event ID 22 + PCAP) oraz przechwyconych sesji HTTP/HTTPS/TCP na bramie REMnux.
+
+\section{Korelacja artefaktów i rekonstrukcja łańcucha ataku}\label{sec:cs2_korelacja}
+% TODO: Chronologiczna tabela korelacji (Timestamp UTC, źródło: RAM / Sysmon / PCAP, PID/ProcessGuid, opis zdarzenia) oraz tabela mapowania TTP na matrycę MITRE ATT&CK.
+
+\section{Inżynieria detekcji i walidacja reguł}\label{sec:cs2_inzynieria_detekcji}
+
+\subsection{Projekt i implementacja reguły YARA}\label{subsec:cs2_regula_yara}
+% TODO: Listing autorskiej reguły YARA (style=code) dla wyekstrahowanego ładunku z pamięci RAM wraz z uzasadnieniem doboru ciągów i warunków.
+
+\subsection{Projekt i implementacja reguł Sigma}\label{subsec:cs2_regula_sigma}
+% TODO: Listing autorskiej reguły Sigma (style=code) dla zachowań zarejestrowanych w dziennikach Sysmon wraz z opisem logiki detekcji.
+
+\subsection{Weryfikacja skuteczności i testy fałszywych alarmów (FP/TP)}\label{subsec:cs2_walidacja}
+% TODO: Wyniki walidacji reguł YARA i Sigma na zainfekowanym materiale dowodowym (TP) oraz na czystej migawce referencyjnej Clean_State (FP = 0).
+
+\section{Zestawienie wskaźników kompromitacji (IoC) oraz aktywności (IoA)}\label{sec:cs2_ioc_ioa}
+% TODO: Zbiorcza tabela wskaźników IoC (hashe SHA-256, ścieżki plików, klucze rejestru, mutexy, domeny/IP C2) oraz wskaźników behawioralnych IoA dla Próbki #2.
+
